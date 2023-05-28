@@ -1,0 +1,176 @@
+﻿@page "/product"
+@using System.Text.Json;
+@using global::Shared.Entity;
+@inject HttpClient Http
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Data;
+@using global::Shared.ModelOData;
+@using Syncfusion.Blazor.Lists
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.TreeMap
+<PageTitle>Index</PageTitle>
+
+@if (products != null)
+{
+	<div class="row">
+		<div class="col">
+			<h3>Select</h3>
+			<SfListView DataSource="@Data" ShowCheckBox="true" onchange="Rerender">
+				<ListViewFieldSettings TValue="DataModel" Id="Id" Text="Text" IsChecked="IsChecked"></ListViewFieldSettings>
+			</SfListView>
+		</div>
+
+		<div class="col">
+			<h3>Order By</h3>
+
+		</div>
+
+	</div>
+
+	<div class="row">
+		<div class="col-12">
+			<SfButton @onclick="onToggleClick" CssClass="btn" IsToggle="true" IsPrimary="true">Search</SfButton>
+		</div>
+	</div>
+
+	<br />
+@*	<table class="table table-striped">
+		<thead>
+			<tr>
+
+				@foreach (DataModel dataModel in Data)
+				{
+					if (dataModel.IsChecked == true)
+					{
+
+						<th scope="col">@dataModel.Text</th>
+					}
+				}
+			</tr>
+		</thead>
+		<tbody>
+
+		
+			
+		
+		</tbody>
+	</table>
+*@
+
+
+	@*	@foreach (Product product in products)
+	{
+		<p>@product.ProductId   @product.Name  @product.PurchasePrice  @product.SellingPrice </p>
+	}*@
+
+
+}
+else
+{
+	<p>Loading....</p>
+}
+
+
+<div class="container">
+	<SfGrid @ref="Grid"  TValue="Product" AllowPaging="true" DataSource="products">
+		@*<SfDataManager Url="@url" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>*@
+		<GridPageSettings PageSize="5"></GridPageSettings>
+	@*	<GridColumns>
+
+
+			<GridColumn Field=@nameof(Product.ProductId) HeaderText="Product ID" Width="120"></GridColumn>
+			<GridColumn Field=@nameof(Product.Name) HeaderText="Product Name" Width="150"></GridColumn>
+
+			<GridColumn Field=@nameof(Product.SellingPrice) HeaderText="Selling Price" Format="C2" Width="120"></GridColumn>
+			<GridColumn Field=@nameof(Product.PurchasePrice) HeaderText="Purchase Price" Format="C2" Width="120"></GridColumn>
+				<GridColumn Field=”Manager.EmployeeId” HeaderText="Manager Id" Width="150"></GridColumn>
+			<GridColumn Field=”Supervisor.EmployeeId” HeaderText="Supervisor Id" Width="150"></GridColumn>
+		</GridColumns>*@
+	</SfGrid>
+</div>
+@code {
+	SfGrid<Product> Grid { get; set; }
+	List<Product> products { get; set; }
+	string url = "https://localhost:7085/odata/OrderOData";
+	public Query Qry = new Query().Expand(new List<string> { "Name" });
+	string qry = "?";
+	public async Task<List<Product>> LoadData()
+	{
+		var response = await Http.GetAsync($"{url}{qry}");
+		if (response.IsSuccessStatusCode)
+		{
+			var responseContent = await response.Content.ReadAsStringAsync();
+			var data = JsonSerializer.Deserialize<ProductApiResponse>(responseContent);
+			return data.Product;
+		}
+		else
+		{
+			return new List<Product>();
+		}
+	}
+	protected async override Task OnInitializedAsync()
+	{
+
+		products = await LoadData();
+
+	}
+	private DataModel[] Data = {
+
+		new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
+		new DataModel { Text = "Name", Id = "Name" ,IsChecked=false },
+		new DataModel { Text = "Selling Price", Id = "SellingPrice" ,IsChecked=false },
+		new DataModel { Text = "Purchase Price", Id = "PurchasePrice",IsChecked=false  },
+
+
+	};
+
+
+	public class DataModel
+	{
+		public string Text { get; set; }
+		public string Id { get; set; }
+		public bool IsChecked { get; set; }
+
+	}
+
+	async Task onToggleClick()
+	{
+		qry += "select=";
+		foreach(DataModel dataModel in Data)
+		{
+			if (dataModel.IsChecked == true)
+			{
+
+				qry += $"{dataModel.Id.ToLower()},";
+			}
+		}
+		qry = qry.Remove(qry.Length - 1, 1);
+
+	
+		products = await LoadData();
+		StateHasChanged();
+		qry = "?";
+		Grid.Refresh();
+	}
+
+}
+
+<style>
+
+	<style >
+	.btn {
+		border-radius: 0;
+		height: 400px;
+		width: 30px;
+		background-color: #007BFF;
+	}
+
+	.e-copy::before {
+		content: '\e77b';
+	}
+
+	.e-btn.e-icon-btn {
+		padding: initial;
+	}
+</style>
+</style>
