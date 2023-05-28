@@ -1,0 +1,50 @@
+﻿@page "/"
+@using System.Text.Json;
+@inject HttpClient Http
+
+
+<div class="container">
+	<h3>Order</h3>
+	@if (orders == null)
+	{
+		<p>@json</p>
+	}
+	else
+	{
+		<p>Loading.......</p>
+	}
+
+</div>
+
+
+@code {
+	List<Order> orders { get; set; }
+	string json { get; set; }
+	string url = "https://localhost:7085/odata/OrderOData?$expand=orderItem";
+
+	public async Task<List<Order>> LoadData()
+	{
+		var response = await Http.GetAsync($"{url}");
+		if (response.IsSuccessStatusCode)
+		{
+			var responseContent = await response.Content.ReadAsStringAsync();
+			var data = JsonSerializer.Deserialize<OrderApiResponse>(responseContent);
+			json = data.ToString();
+			return data.Order;
+		}
+		else
+		{
+			return new List<Order>();
+		}
+	}
+	protected async override Task OnInitializedAsync()
+	{
+		var response = await Http.GetAsync($"{url}");
+		var responseContent = await response.Content.ReadAsStringAsync();
+		json = responseContent.ToString();
+
+		//orders = await LoadData();
+
+
+	}
+}

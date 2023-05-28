@@ -2,15 +2,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 
+// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+
 namespace Backend.Controllers
 {
 
-	public class OrderODataController : ControllerBase
+	public class ProductODataController : ControllerBase
 	{
 
 		private readonly DataContext _context;
-		//private readonly IMapper _mapper;
-		public OrderODataController(DataContext context)
+		public ProductODataController(DataContext context)
 		{
 			_context = context;
 			// _mapper = mapper;
@@ -20,7 +21,9 @@ namespace Backend.Controllers
 		[EnableQuery]
 		public IActionResult Get()
 		{
-			return Ok(_context.Orders.AsQueryable());
+			return Ok(_context.Products.AsQueryable());
 		}
+
+
 	}
 }
