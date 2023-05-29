@@ -1,50 +1,64 @@
 ﻿@page "/"
 @using System.Text.Json;
 @inject HttpClient Http
-
-
+@using Frontend.Service.OrderService;
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Data;
+@using Syncfusion.Blazor.Lists
+@using Syncfusion.Blazor.Buttons
+@inject IOrderService OrderService
 <div class="container">
-	<h3>Order</h3>
-	@if (orders == null)
-	{
-		<p>@json</p>
-	}
-	else
-	{
-		<p>Loading.......</p>
-	}
+    <h3>Order</h3>
+    @if (orders != null)
+    {
+        <SfGrid TValue="Order" AllowPaging="true" DataSource="orders">
+
+            @*		<GridPageSettings PageSize="5"></GridPageSettings>
+        <GridColumn>
+        <GridColumn Field=@nameof(Product.ProductId) HeaderText="Product ID" TextAlign="TextAlign.Right" Width="120" DefaultValue="0"></GridColumn>
+        <GridColumn Field=@nameof(Product.Name) HeaderText="Product ID" Width="120" DefaultValue="0"></GridColumn>
+        <GridColumn Field=@nameof(Product.PurchasePrice) HeaderText="Purchase Price" Width="120" DefaultValue="0"></GridColumn>
+        <GridColumn Field=@nameof(Product.SellingPrice) HeaderText="Selling Price" Width="120" DefaultValue="0"></GridColumn>
+        <GridColumn Field=@nameof(Product.Unit) HeaderText="Unit" Width="120" DefaultValue="0"></GridColumn>
+
+        </GridColumn>*@
+
+        </SfGrid>
+    }
+    else
+    {
+        <p>Loading.......</p>
+    }
 
 </div>
 
 
 @code {
-	List<Order> orders { get; set; }
-	string json { get; set; }
-	string url = "https://localhost:7085/odata/OrderOData?$expand=orderItem";
+    List<Order> orders { get; set; }
+    string json { get; set; }
+    string url = "https://localhost:7085/odata/OrderOData?$expand=orderItem(expand=product)";
 
-	public async Task<List<Order>> LoadData()
-	{
-		var response = await Http.GetAsync($"{url}");
-		if (response.IsSuccessStatusCode)
-		{
-			var responseContent = await response.Content.ReadAsStringAsync();
-			var data = JsonSerializer.Deserialize<OrderApiResponse>(responseContent);
-			json = data.ToString();
-			return data.Order;
-		}
-		else
-		{
-			return new List<Order>();
-		}
-	}
-	protected async override Task OnInitializedAsync()
-	{
-		var response = await Http.GetAsync($"{url}");
-		var responseContent = await response.Content.ReadAsStringAsync();
-		json = responseContent.ToString();
+    public async Task<List<Order>> LoadData()
+    {
+        try
+        {
+            return await OrderService.GetOrdersAsync();
+        }
+        catch (Exception err)
+        {
+            Console.WriteLine(err.Message);
+            return new List<Order>();
+        }
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        //var response = await Http.GetAsync($"{url}");
+        //var responseContent = await response.Content.ReadAsStringAsync();
+        //json = responseContent.ToString();
 
-		//orders = await LoadData();
+        orders = await LoadData();
+        
 
 
-	}
+    }
 }

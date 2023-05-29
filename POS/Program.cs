@@ -1,3 +1,4 @@
+using Frontend.Service.OrderService;
 using POS.Data;
 using Syncfusion.Blazor;
 
@@ -9,6 +10,13 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddSyncfusionBlazor();
+
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddHttpClient<IOrderService, OrderService>(client =>
+{
+	client.BaseAddress = new Uri(builder.Configuration.GetConnectionString("BaseUrl"));
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

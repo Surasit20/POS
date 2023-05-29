@@ -1,11 +1,12 @@
 ﻿@page "/product"
 @using System.Text.Json;
 @inject HttpClient Http
+@using Frontend.Service.OrderService;
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.Data;
 @using Syncfusion.Blazor.Lists
 @using Syncfusion.Blazor.Buttons
-@using Syncfusion.Blazor.TreeMap
+@inject IOrderService OrderService
 <PageTitle>Index</PageTitle>
 
 <div class="container-fluid warpper-product">
@@ -79,22 +80,20 @@
 
 	public async Task<List<Product>> LoadData()
 	{
-		var response = await Http.GetAsync($"{url}{qry}");
-		if (response.IsSuccessStatusCode)
+		try
 		{
-			var responseContent = await response.Content.ReadAsStringAsync();
-			var data = JsonSerializer.Deserialize<ProductApiResponse>(responseContent);
-			return data.Product;
-		}
-		else
+			return await OrderService.GetProductsAsync(qry);
+		}catch(Exception err)
 		{
+			Console.WriteLine(err.Message);
 			return new List<Product>();
 		}
+
 	}
 	protected async override Task OnInitializedAsync()
 	{
 
-		products = await LoadData();
+		products = await OrderService.GetProductsAsync(qry);
 
 	}
 	private DataModel[] DataSelect = {
@@ -136,7 +135,7 @@
 				qry += $"{dataModel.Id.ToLower()},";
 			}
 		}
-		qry = qry.Remove(qry.Length - 1, 1);
+		//qry = qry.Remove(qry.Length - 1, 1);
 		qry += "&orderby=";
 
 
@@ -149,7 +148,7 @@
 			}
 
 		}
-		qry = qry.Remove(qry.Length - 1, 1);
+		//qry = qry.Remove(qry.Length - 1, 1);
 		qry += $" {stringOrderBy}";
 
 		products = await LoadData();

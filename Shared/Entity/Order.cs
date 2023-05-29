@@ -30,7 +30,7 @@ namespace Shared.Entity
         public DateTime OrderDate { get; set; }
 
         [Required]
-        public Status Status { get; set; }
+        public int Status { get; set; }
 
         public ICollection<OrderItem> OrderItem { get; set; }
         public Supplier Supplier { get; set; }

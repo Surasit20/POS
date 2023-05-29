@@ -10,6 +10,7 @@
     <PackageReference Include="Syncfusion.Blazor.Core" Version="20.3.0.61" />
     <PackageReference Include="Syncfusion.Blazor.Grid" Version="20.3.0.61" />
     <PackageReference Include="Syncfusion.Blazor.Themes" Version="20.3.0.61" />
+    <PackageReference Include="Syncfusion.Blazor.TreeGrid" Version="20.3.0.61" />
     <PackageReference Include="Syncfusion.Blazor.TreeMap" Version="20.3.0.61" />
   </ItemGroup>
 

@@ -1,6 +1,9 @@
 ﻿using Backend.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Shared.Entity;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -29,12 +32,8 @@ namespace Backend.Controllers
             return Ok(_context.Products.AsQueryable());
         }
 
-        // GET api/<OrderController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
+		// GET api/<OrderController>/5
+	
 
         // POST api/<OrderController>
         [HttpPost]

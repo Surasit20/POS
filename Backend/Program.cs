@@ -22,7 +22,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(options =>
 {
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-	options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+	//options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
 
@@ -49,6 +49,13 @@ static IEdmModel GetEdmModel()
 	ODataConventionModelBuilder modelBuilder = new ODataConventionModelBuilder();
 	modelBuilder.EntitySet<Product>("ProductOData");
 	modelBuilder.EntitySet<Order>("OrderOData");
+
+	modelBuilder.Namespace = "ProductService";
+	modelBuilder.EntityType<Product>().Collection
+	.Function("MostExpensive")
+	.Returns<decimal>();
+
+
 	//modelBuilder.EntitySet<OrderItem>("OrderOData");
 	//modelBuilder.EntitySet<Supplier>("OrderOData");
 	//modelBuilder.EntitySet<Purchaser>("OrderOData");
