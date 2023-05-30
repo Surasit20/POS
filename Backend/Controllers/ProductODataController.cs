@@ -29,9 +29,15 @@ namespace Backend.Controllers
 		{
 			return Ok(_context.Products.AsQueryable());
 		}
+        [EnableQuery]
+        public SingleResult<Product> Get([FromODataUri] int key)
+        {
+            IQueryable<Product> result = _context.Products.Where(p => p.ProductId == key);
+            return SingleResult.Create(result);
+        }
 
-		
-		[HttpGet]
+
+        [HttpGet]
 		public IActionResult MostExpensive()
 		{
 			var product = _context.Products.Max(x => x.PurchasePrice);

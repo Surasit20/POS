@@ -29,7 +29,6 @@ namespace Backend.Controllers
 		}
 
 
-
 		[EnableQuery]
 		public SingleResult<Order> Get([FromODataUri] int key)
 		{
@@ -41,8 +40,6 @@ namespace Backend.Controllers
 		public SingleResult<Supplier> GetSupplier([FromODataUri] int key)
 		{
 			var result = _context.Orders.Where(o => o.OrderId == key).Select(o => o.Supplier);
-
-		
 			return SingleResult.Create(result);
 		}
 

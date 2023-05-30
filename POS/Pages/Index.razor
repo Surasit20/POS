@@ -6,61 +6,93 @@
 @using Syncfusion.Blazor.Data;
 @using Syncfusion.Blazor.Lists
 @using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Inputs
 @inject IOrderService OrderService
 <PageTitle>Index</PageTitle>
 
 <div class="container-fluid warpper-product">
-	@if (products != null)
-	{
-		<div class="container">
-			<div class="row">
-				<div class="col">
-					<h3>Select</h3>
-					<SfListView DataSource="@DataSelect" ShowCheckBox="true" onchange="Rerender">
-						<ListViewFieldSettings TValue="DataModel" Id="Id" Text="Text" IsChecked="IsChecked"></ListViewFieldSettings>
-					</SfListView>
-				</div>
+    @if (products != null)
+    {
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h3>Select</h3>
+                    <SfListView DataSource="@DataSelect" ShowCheckBox="true" onchange="Rerender">
+                        <ListViewFieldSettings TValue="DataModel" Id="Id" Text="Text" IsChecked="IsChecked"></ListViewFieldSettings>
+                    </SfListView>
+                </div>
 
-				<div class="col">
-					<h3>Order By</h3>
-					<SfRadioButton Label="Desc" Name="Desc" Value="desc" @bind-Checked="stringOrderBy"></SfRadioButton>
-					<SfRadioButton Label="Asc" Name="Asc" Value="asc" @bind-Checked="stringOrderBy"></SfRadioButton>
-					<SfListView DataSource="@DataOrderBy" ShowCheckBox="true" onchange="Rerender">
-					<ListViewFieldSettings TValue="DataModel" Id="Id" Text="Text" IsChecked="IsChecked"></ListViewFieldSettings>
-					</SfListView>
-				</div>
+                <div class="col">
+                    <h3>Order By</h3>
+                    <SfRadioButton Label="Desc" Name="Desc" Value="desc" @bind-Checked="stringOrderBy"></SfRadioButton>
+                    <SfRadioButton Label="Asc" Name="Asc" Value="asc" @bind-Checked="stringOrderBy"></SfRadioButton>
+                    <SfListView DataSource="@DataOrderBy" ShowCheckBox="true" onchange="Rerender">
+                        <ListViewFieldSettings TValue="DataModel" Id="Id" Text="Text" IsChecked="IsChecked"></ListViewFieldSettings>
+                    </SfListView>
+                </div>
 
-			</div>
+            </div>
 
-			<div class="row">
 
-			</div>
+            <div class="row my-3">
+                <div class="d-flex justify-content-center">
+                    <SfButton @onclick="onToggleClick"  CssClass="btn" IsToggle="true" IsPrimary="true">Search</SfButton>
+                </div>
+            </div>
 
-			<div class="row my-3">
-				<div class="d-flex justify-content-center">
-					<SfButton @onclick="onToggleClick" CssClass="btn" IsToggle="true" IsPrimary="true">Search</SfButton>
-				</div>
-			</div>
 
-			<br />
-		</div>
-		<SfGrid @ref="Grid" TValue="Product" AllowPaging="true" DataSource="products">
-			
-	@*		<GridPageSettings PageSize="5"></GridPageSettings>
-		<GridColumn>
-				<GridColumn Field=@nameof(Product.ProductId) HeaderText="Product ID" TextAlign="TextAlign.Right" Width="120" DefaultValue="0"></GridColumn>
-				<GridColumn Field=@nameof(Product.Name) HeaderText="Product ID" Width="120" DefaultValue="0"></GridColumn>
-				<GridColumn Field=@nameof(Product.PurchasePrice) HeaderText="Purchase Price" Width="120" DefaultValue="0"></GridColumn>
-				<GridColumn Field=@nameof(Product.SellingPrice) HeaderText="Selling Price" Width="120" DefaultValue="0"></GridColumn>
-				<GridColumn Field=@nameof(Product.Unit) HeaderText="Unit" Width="120" DefaultValue="0"></GridColumn>
-			</GridColumn>*@
+            <div class="row">
+                <div class="col">
 
-		</SfGrid>
-	}
-	else
-	{
-		<p>Loading....</p>
-	}
+                    <h2>
+                        Search By Product ID
+                    </h2>
+                    <div class="row">
+                        <div class="col-10">
+                            <SfNumericTextBox TValue="int" @bind-Value="@numericValue"></SfNumericTextBox>
+                        </div>
+                        <div class="col-2">
+                            <SfButton @onclick="onClickSearchId"   IsToggle="true" IsPrimary="true">Search</SfButton>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="col">
+                    <h2>
+                        Search By Product Name
+                    </h2>
+           
+                    <div class="row">
+                        <div class="col-10">
+                            <SfTextBox TValue="string" @bind-Value="@nameProduct"></SfTextBox>
+                        </div>
+                        <div class="col-2">
+                            <SfButton @onclick="onClickSearchName" IsToggle="true" IsPrimary="true">Search</SfButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <br />
+        </div>
+        <SfGrid @ref="Grid" TValue="Product" AllowPaging="true" DataSource="products">
+
+            @*		<GridPageSettings PageSize="5"></GridPageSettings>
+        <GridColumn>
+        <GridColumn Field=@nameof(Product.ProductId) HeaderText="Product ID" TextAlign="TextAlign.Right" Width="120" DefaultValue="0"></GridColumn>
+        <GridColumn Field=@nameof(Product.Name) HeaderText="Product ID" Width="120" DefaultValue="0"></GridColumn>
+        <GridColumn Field=@nameof(Product.PurchasePrice) HeaderText="Purchase Price" Width="120" DefaultValue="0"></GridColumn>
+        <GridColumn Field=@nameof(Product.SellingPrice) HeaderText="Selling Price" Width="120" DefaultValue="0"></GridColumn>
+        <GridColumn Field=@nameof(Product.Unit) HeaderText="Unit" Width="120" DefaultValue="0"></GridColumn>
+        </GridColumn>*@
+
+        </SfGrid>
+    }
+    else
+    {
+        <p>Loading....</p>
+    }
 </div>
 
 
@@ -71,113 +103,125 @@
 
 
 @code {
-	SfGrid<Product> Grid { get; set; }
-	List<Product> products { get; set; }
-	string url = "https://localhost:7085/odata/ProductOData";
-	public Query Qry = new Query().Expand(new List<string> { "Name" });
-	string qry = "?";
-	private string stringOrderBy = "desc";
+    SfGrid<Product> Grid { get; set; }
+    List<Product> products { get; set; }
+    string url = "https://localhost:7085/odata/ProductOData";
+    public Query Qry = new Query().Expand(new List<string> { "Name" });
+    string qry = "?";
+    private string stringOrderBy = "desc";
+    public int numericValue { get; set; } = 10;
+    public string nameProduct { get; set; } = "";
+    public async Task<List<Product>> LoadData()
+    {
+        try
+        {
+            return await OrderService.GetProductsAsync(qry);
+        }
+        catch (Exception err)
+        {
+            Console.WriteLine(err.Message);
+            return new List<Product>();
+        }
 
-	public async Task<List<Product>> LoadData()
-	{
-		try
-		{
-			return await OrderService.GetProductsAsync(qry);
-		}catch(Exception err)
-		{
-			Console.WriteLine(err.Message);
-			return new List<Product>();
-		}
+    }
+    protected async override Task OnInitializedAsync()
+    {
 
-	}
-	protected async override Task OnInitializedAsync()
-	{
+        products = await OrderService.GetProductsAsync(qry);
 
-		products = await OrderService.GetProductsAsync(qry);
+    }
+    private DataModel[] DataSelect = {
 
-	}
-	private DataModel[] DataSelect = {
+        new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
+        new DataModel { Text = "Name", Id = "Name" ,IsChecked=false },
+        new DataModel { Text = "Selling Price", Id = "SellingPrice" ,IsChecked=false },
+        new DataModel { Text = "Purchase Price", Id = "PurchasePrice",IsChecked=false  },
+        new DataModel { Text = "Unit", Id = "Unit",IsChecked=false  },
 
-		new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
-		new DataModel { Text = "Name", Id = "Name" ,IsChecked=false },
-		new DataModel { Text = "Selling Price", Id = "SellingPrice" ,IsChecked=false },
-		new DataModel { Text = "Purchase Price", Id = "PurchasePrice",IsChecked=false  },
-		new DataModel { Text = "Unit", Id = "Unit",IsChecked=false  },
+    };
 
-	};
+    private DataModel[] DataOrderBy = {
 
-	private DataModel[] DataOrderBy = {
+        new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
+        new DataModel { Text = "Name", Id = "Name" ,IsChecked=false },
+        new DataModel { Text = "Selling Price", Id = "SellingPrice" ,IsChecked=false },
+        new DataModel { Text = "Purchase Price", Id = "PurchasePrice",IsChecked=false  },
+        new DataModel { Text = "Unit", Id = "Unit",IsChecked=false  },
 
-		new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
-		new DataModel { Text = "Name", Id = "Name" ,IsChecked=false },
-		new DataModel { Text = "Selling Price", Id = "SellingPrice" ,IsChecked=false },
-		new DataModel { Text = "Purchase Price", Id = "PurchasePrice",IsChecked=false  },
-		new DataModel { Text = "Unit", Id = "Unit",IsChecked=false  },
+    };
 
-	};
+    public class DataModel
+    {
+        public string Text { get; set; }
+        public string Id { get; set; }
+        public bool IsChecked { get; set; }
 
-	public class DataModel
-	{
-		public string Text { get; set; }
-		public string Id { get; set; }
-		public bool IsChecked { get; set; }
+    }
 
-	}
+    async Task onClickSearchId()
+    {
+        products = await OrderService.GetProductByIdAsync(numericValue);
+        StateHasChanged();
+    }
+    async Task onClickSearchName()
+    {
+        products = await OrderService.GetProductByName(nameProduct);
+        StateHasChanged();
+    }
+    async Task onToggleClick()
+    {
+        qry += "select=";
+        foreach (DataModel dataModel in DataSelect)
+        {
+            if (dataModel.IsChecked == true)
+            {
 
-	async Task onToggleClick()
-	{
-		qry += "select=";
-		foreach (DataModel dataModel in DataSelect)
-		{
-			if (dataModel.IsChecked == true)
-			{
-
-				qry += $"{dataModel.Id.ToLower()},";
-			}
-		}
-		//qry = qry.Remove(qry.Length - 1, 1);
-		qry += "&orderby=";
+                qry += $"{dataModel.Id.ToLower()},";
+            }
+        }
+        qry = qry.Remove(qry.Length - 1, 1);
+        qry += "&orderby=";
 
 
-		foreach (DataModel dataModel in DataOrderBy)
-		{
-			if (dataModel.IsChecked == true)
-			{
+        foreach (DataModel dataModel in DataOrderBy)
+        {
+            if (dataModel.IsChecked == true)
+            {
 
-				qry += $"{dataModel.Id.ToLower()},";
-			}
+                qry += $"{dataModel.Id.ToLower()},";
+            }
 
-		}
-		//qry = qry.Remove(qry.Length - 1, 1);
-		qry += $" {stringOrderBy}";
+        }
+        qry = qry.Remove(qry.Length - 1, 1);
+        qry += $" {stringOrderBy}";
 
-		products = await LoadData();
-		StateHasChanged();
-		qry = "?";
-		Grid.Refresh();
-	}
+        products = await OrderService.GetProductsAsync(qry);
+        StateHasChanged();
+        qry = "?";
+        Grid.Refresh();
+    }
 
 }
 
 
 
 <style>
-	.btn {
-		border-radius: 0;
-		height: 50px;
-		width: 400px;
-		background-color: #007BFF;
-	}
+    .btn {
+        border-radius: 0;
+        height: 50px;
+        width: 400px;
+        background-color: #007BFF;
+    }
 
-	.e-copy::before {
-		content: '\e77b';
-	}
+    .e-copy::before {
+        content: '\e77b';
+    }
 
-	.e-btn.e-icon-btn {
-		padding: initial;
-	}
+    .e-btn.e-icon-btn {
+        padding: initial;
+    }
 
-	.warpper-product {
-		height: 100%;
-	}
+    .warpper-product {
+        height: 100%;
+    }
 </style>
