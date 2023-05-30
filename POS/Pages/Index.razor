@@ -7,12 +7,16 @@
 @using Syncfusion.Blazor.Lists
 @using Syncfusion.Blazor.Buttons
 @using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Popups
+@using Syncfusion.Blazor.Notifications
+@using global::Shared.ModelDTO;
 @inject IOrderService OrderService
 <PageTitle>Index</PageTitle>
 
 <div class="container-fluid warpper-product">
     @if (products != null)
     {
+        <SfFab Target="#target" IconCss="e-icons e-plus" OnClick="@OpenDialog" Position=FabPosition.TopRight></SfFab>
         <div class="container">
             <div class="row">
                 <div class="col">
@@ -36,7 +40,7 @@
 
             <div class="row my-3">
                 <div class="d-flex justify-content-center">
-                    <SfButton @onclick="onToggleClick"  CssClass="btn" IsToggle="true" IsPrimary="true">Search</SfButton>
+                    <SfButton @onclick="onToggleClick" CssClass="btn" IsToggle="true" IsPrimary="true">Search</SfButton>
                 </div>
             </div>
 
@@ -52,7 +56,7 @@
                             <SfNumericTextBox TValue="int" @bind-Value="@numericValue"></SfNumericTextBox>
                         </div>
                         <div class="col-2">
-                            <SfButton @onclick="onClickSearchId"   IsToggle="true" IsPrimary="true">Search</SfButton>
+                            <SfButton @onclick="onClickSearchId" IsToggle="true" IsPrimary="true">Search</SfButton>
                         </div>
                     </div>
 
@@ -62,7 +66,7 @@
                     <h2>
                         Search By Product Name
                     </h2>
-           
+
                     <div class="row">
                         <div class="col-10">
                             <SfTextBox TValue="string" @bind-Value="@nameProduct"></SfTextBox>
@@ -88,6 +92,36 @@
         </GridColumn>*@
 
         </SfGrid>
+
+
+        <SfDialog Width="300px" ShowCloseIcon="true" CloseOnEscape="true" @bind-Visible="@IsVisible">
+            <DialogTemplates>
+                <Header>
+                    <div>Add Product</div>
+                </Header>
+                <Content>
+                    <SfTextBox TValue="string" @bind-Value="@productDto.Name" FloatLabelType='@FloatLabelType.Always' Placeholder='Name'></SfTextBox>
+                    <SfTextBox TValue="string" @bind-Value="@productDto.Description" FloatLabelType='@FloatLabelType.Always' Placeholder='Description'></SfTextBox>
+                    <SfNumericTextBox TValue="decimal" @bind-Value="@productDto.PurchasePrice" FloatLabelType='@FloatLabelType.Always' Placeholder='Purchase Price'></SfNumericTextBox>
+                    <SfNumericTextBox TValue="decimal" @bind-Value="@productDto.SellingPrice" FloatLabelType='@FloatLabelType.Always' Placeholder='Selling Price'></SfNumericTextBox>
+                    <SfTextBox TValue="string" @bind-Value="@productDto.Unit" FloatLabelType='@FloatLabelType.Always' Placeholder='Unit'></SfTextBox>
+
+                </Content>
+            </DialogTemplates>
+            <DialogButtons>
+
+                <DialogButton Content="@((!IsAddLoadingVisible) ?"Add" :"Loading....")" Disabled="@IsAddLoadingVisible" IsPrimary="true" IconCss="e-icons e-plus" OnClick="@onAddProduct" />
+            
+                <DialogButton Content="Cancel" IconCss="e-icons e-close-icon" OnClick="@CloseDialog" />
+            </DialogButtons>
+        </SfDialog>
+
+        <div class="col-lg-4 control-section">
+            <SfToast @ref="ToastObj" ID="toast_type">
+                <ToastPosition X="@ToastPosition"></ToastPosition>
+            </SfToast>
+        </div>
+
     }
     else
     {
@@ -103,14 +137,20 @@
 
 
 @code {
+
     SfGrid<Product> Grid { get; set; }
     List<Product> products { get; set; }
     string url = "https://localhost:7085/odata/ProductOData";
-    public Query Qry = new Query().Expand(new List<string> { "Name" });
+    private Query Qry = new Query().Expand(new List<string> { "Name" });
     string qry = "?";
     private string stringOrderBy = "desc";
-    public int numericValue { get; set; } = 10;
-    public string nameProduct { get; set; } = "";
+    private int numericValue { get; set; } = 10;
+    private string nameProduct { get; set; } = "";
+    private bool IsVisible { get; set; } = false;
+    private bool IsAddLoadingVisible { get; set; } = false;
+    private ProductDTO productDto { get; set; } = new ProductDTO();
+    SfToast ToastObj;
+    private string ToastPosition = "Right";
     public async Task<List<Product>> LoadData()
     {
         try
@@ -139,7 +179,13 @@
         new DataModel { Text = "Unit", Id = "Unit",IsChecked=false  },
 
     };
-
+    private List<ToastModel> Toast = new List<ToastModel>
+    {
+        new ToastModel{ Title = "Warning!", Content="There was a problem with your network connection.", CssClass="e-toast-warning", Icon="e-warning toast-icons" },
+        new ToastModel{ Title = "Success!", Content="Your add product successfully.", CssClass="e-toast-success", Icon="e-success toast-icons" },
+        new ToastModel{ Title = "Error!", Content="A problem occurred while submitting your data.", CssClass="e-toast-danger", Icon="e-error toast-icons" },
+        new ToastModel{ Title = "Information!", Content="Please read the comments carefully.", CssClass="e-toast-info", Icon="e-info toast-icons" }
+    };
     private DataModel[] DataOrderBy = {
 
         new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
@@ -158,6 +204,17 @@
 
     }
 
+
+
+    private void OpenDialog()
+    {
+        this.IsVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        this.IsVisible = false;
+    }
     async Task onClickSearchId()
     {
         products = await OrderService.GetProductByIdAsync(numericValue);
@@ -168,6 +225,23 @@
         products = await OrderService.GetProductByName(nameProduct);
         StateHasChanged();
     }
+    async Task onAddProduct()
+    {
+        IsAddLoadingVisible = true;
+        await Task.Delay(2000);
+        
+        var product = await OrderService.AddProduct(productDto);
+        if (product.ProductId != 0)
+        {
+            await this.ToastObj.ShowAsync(Toast[1]);
+       
+            this.IsVisible = false;
+
+        }
+        IsAddLoadingVisible = false;
+        StateHasChanged();
+    }
+
     async Task onToggleClick()
     {
         qry += "select=";
@@ -223,5 +297,18 @@
 
     .warpper-product {
         height: 100%;
+    }
+
+    a, a:hover, .highcontrast #dialog a, .highcontrast #dialog a:hover {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .e-btn-icon.e-icons.e-ok-icon.e-icon-left:before {
+        content: '\e7ff';
+    }
+
+    .e-btn-icon.e-icons.e-close-icon.e-icon-left:before {
+        content: '\e878';
     }
 </style>

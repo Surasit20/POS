@@ -1,10 +1,12 @@
-﻿using Backend.Data;
+﻿using AutoMapper;
+using Backend.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Shared.Entity;
+using Shared.ModelDTO;
 using System.Net;
 
 
@@ -17,10 +19,11 @@ namespace Backend.Controllers
 	{
 
 		private readonly DataContext _context;
-		public ProductODataController(DataContext context)
+        private readonly IMapper _mapper;
+        public ProductODataController(DataContext context, IMapper mapper)
 		{
 			_context = context;
-			// _mapper = mapper;
+			_mapper = mapper;
 
 		}
 
@@ -45,18 +48,19 @@ namespace Backend.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Post(Product product)
+		public async Task<IActionResult> Post(ProductDTO productDto)
 		{
 			if (!ModelState.IsValid)
 			{
 				return BadRequest(ModelState);
 			}
-			_context.Products.Add(product);
+            Product product = _mapper.Map<Product>(productDto);
+            _context.Products.Add(product);
 			await _context.SaveChangesAsync();
 			return Created(product);
 		}
 
-		[HttpPost]
+		[HttpDelete]
 		public async Task<IActionResult> Delete([FromODataUri] int key)
 		{
 			var product = await _context.Products.FindAsync(key);

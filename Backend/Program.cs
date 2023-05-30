@@ -25,7 +25,7 @@ builder.Services.AddDbContext<DataContext>(options =>
 	//options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
-
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 var app = builder.Build();
 

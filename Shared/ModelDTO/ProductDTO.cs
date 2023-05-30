@@ -5,7 +5,7 @@ namespace Shared.ModelDTO
 {
     public class ProductDTO
     {
-        public int ProductId { get; set; }
+        public int ProductId { get; set; } = 0;
 
         [StringLength(300, MinimumLength = 2)]
         public string Name { get; set; }
@@ -20,12 +20,11 @@ namespace Shared.ModelDTO
         public decimal SellingPrice { get; set; }
 
         [StringLength(2000, MinimumLength = 2)]
-        public string? ImageUrl { get; set; }
+        public string? ImageUrl { get; set; } = String.Empty;
 
         [StringLength(50, MinimumLength = 1)]
         public string Unit { get; set; }
 
-        //[JsonIgnore]
-        //public ICollection<OrderItem> OrderItems { get; set; }
+        public ICollection<OrderItemDTO> OrderItem { get; set; } = new List<OrderItemDTO>();
     }
 }
