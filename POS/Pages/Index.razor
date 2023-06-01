@@ -9,6 +9,7 @@
 @using Syncfusion.Blazor.Inputs
 @using Syncfusion.Blazor.Popups
 @using Syncfusion.Blazor.Notifications
+@using Syncfusion.Blazor.Spinner
 @using global::Shared.ModelDTO;
 @inject IOrderService OrderService
 <PageTitle>Index</PageTitle>
@@ -62,6 +63,8 @@
 
 
                 </div>
+
+
                 <div class="col">
                     <h2>
                         Search By Product Name
@@ -72,7 +75,22 @@
                             <SfTextBox TValue="string" @bind-Value="@nameProduct"></SfTextBox>
                         </div>
                         <div class="col-2">
-                            <SfButton @onclick="onClickSearchName" IsToggle="true" IsPrimary="true">Search</SfButton>
+                            <SfButton @onclick="onClickSearchName" IsPrimary="true">Search</SfButton>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <h2>
+                        Delete By Id
+                    </h2>
+
+                    <div class="row">
+                        <div class="col-10">
+                            <SfNumericTextBox TValue="int" @bind-Value="@numericValueIdDelte"></SfNumericTextBox>
+                        </div>
+                        <div class="col-2">
+                            <SfButton @onclick="onClickDeleteById" CssClass="e-danger">Delete</SfButton>
                         </div>
                     </div>
                 </div>
@@ -111,7 +129,7 @@
             <DialogButtons>
 
                 <DialogButton Content="@((!IsAddLoadingVisible) ?"Add" :"Loading....")" Disabled="@IsAddLoadingVisible" IsPrimary="true" IconCss="e-icons e-plus" OnClick="@onAddProduct" />
-            
+
                 <DialogButton Content="Cancel" IconCss="e-icons e-close-icon" OnClick="@CloseDialog" />
             </DialogButtons>
         </SfDialog>
@@ -125,7 +143,7 @@
     }
     else
     {
-        <p>Loading....</p>
+        <SfSpinner></SfSpinner>
     }
 </div>
 
@@ -145,31 +163,122 @@
     string qry = "?";
     private string stringOrderBy = "desc";
     private int numericValue { get; set; } = 10;
+    private int numericValueIdDelte { get; set; } = 10;
     private string nameProduct { get; set; } = "";
     private bool IsVisible { get; set; } = false;
     private bool IsAddLoadingVisible { get; set; } = false;
     private ProductDTO productDto { get; set; } = new ProductDTO();
     SfToast ToastObj;
     private string ToastPosition = "Right";
-    public async Task<List<Product>> LoadData()
+    public async Task LoadData()
     {
         try
         {
-            return await OrderService.GetProductsAsync(qry);
+            var data = await OrderService.GetProductsAsync(qry);
+            products = data.Product;
+
+            StateHasChanged();
+
         }
         catch (Exception err)
         {
             Console.WriteLine(err.Message);
-            return new List<Product>();
+
         }
 
     }
     protected async override Task OnInitializedAsync()
     {
 
-        products = await OrderService.GetProductsAsync(qry);
+        await LoadData();
 
     }
+
+
+    private void OpenDialog()
+    {
+        this.IsVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        this.IsVisible = false;
+    }
+    private async void onClickDeleteById()
+    {
+        bool isSuccess = await OrderService.DeleteProduct(numericValueIdDelte);
+        if (isSuccess)
+        {
+            await this.ToastObj.ShowAsync(Toast[2]);
+
+        }
+        else
+        {
+            await this.ToastObj.ShowAsync(Toast[3]);
+        }
+
+    }
+
+    private async Task onClickSearchId()
+    {
+        products = await OrderService.GetProductByIdAsync(numericValue);
+        StateHasChanged();
+    }
+    private async Task onClickSearchName()
+    {
+        products = await OrderService.GetProductByName(nameProduct);
+        StateHasChanged();
+    }
+    private async Task onAddProduct()
+    {
+        IsAddLoadingVisible = true;
+        await Task.Delay(2000);
+
+        var product = await OrderService.AddProduct(productDto);
+        if (product.ProductId != 0)
+        {
+            await this.ToastObj.ShowAsync(Toast[1]);
+            this.IsVisible = false;
+            await LoadData();
+
+        }
+        IsAddLoadingVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task onToggleClick()
+    {
+        qry += "select=";
+        foreach (DataModel dataModel in DataSelect)
+        {
+            if (dataModel.IsChecked)
+            {
+
+                qry += $"{dataModel.Id.ToLower()},";
+            }
+        }
+        qry = qry.Remove(qry.Length - 1, 1);
+        qry += "&orderby=";
+
+
+        foreach (DataModel dataModel in DataOrderBy)
+        {
+            if (dataModel.IsChecked)
+            {
+
+                qry += $"{dataModel.Id.ToLower()},";
+            }
+
+        }
+        qry = qry.Remove(qry.Length - 1, 1);
+        qry += $" {stringOrderBy}";
+
+        await LoadData();
+
+        qry = "?";
+        await Grid.Refresh();
+    }
+
     private DataModel[] DataSelect = {
 
         new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
@@ -183,6 +292,7 @@
     {
         new ToastModel{ Title = "Warning!", Content="There was a problem with your network connection.", CssClass="e-toast-warning", Icon="e-warning toast-icons" },
         new ToastModel{ Title = "Success!", Content="Your add product successfully.", CssClass="e-toast-success", Icon="e-success toast-icons" },
+        new ToastModel{ Title = "Success!", Content="Your delete product successfully.", CssClass="e-toast-success", Icon="e-success toast-icons" },
         new ToastModel{ Title = "Error!", Content="A problem occurred while submitting your data.", CssClass="e-toast-danger", Icon="e-error toast-icons" },
         new ToastModel{ Title = "Information!", Content="Please read the comments carefully.", CssClass="e-toast-info", Icon="e-info toast-icons" }
     };
@@ -202,77 +312,6 @@
         public string Id { get; set; }
         public bool IsChecked { get; set; }
 
-    }
-
-
-
-    private void OpenDialog()
-    {
-        this.IsVisible = true;
-    }
-
-    private void CloseDialog()
-    {
-        this.IsVisible = false;
-    }
-    async Task onClickSearchId()
-    {
-        products = await OrderService.GetProductByIdAsync(numericValue);
-        StateHasChanged();
-    }
-    async Task onClickSearchName()
-    {
-        products = await OrderService.GetProductByName(nameProduct);
-        StateHasChanged();
-    }
-    async Task onAddProduct()
-    {
-        IsAddLoadingVisible = true;
-        await Task.Delay(2000);
-        
-        var product = await OrderService.AddProduct(productDto);
-        if (product.ProductId != 0)
-        {
-            await this.ToastObj.ShowAsync(Toast[1]);
-       
-            this.IsVisible = false;
-
-        }
-        IsAddLoadingVisible = false;
-        StateHasChanged();
-    }
-
-    async Task onToggleClick()
-    {
-        qry += "select=";
-        foreach (DataModel dataModel in DataSelect)
-        {
-            if (dataModel.IsChecked == true)
-            {
-
-                qry += $"{dataModel.Id.ToLower()},";
-            }
-        }
-        qry = qry.Remove(qry.Length - 1, 1);
-        qry += "&orderby=";
-
-
-        foreach (DataModel dataModel in DataOrderBy)
-        {
-            if (dataModel.IsChecked == true)
-            {
-
-                qry += $"{dataModel.Id.ToLower()},";
-            }
-
-        }
-        qry = qry.Remove(qry.Length - 1, 1);
-        qry += $" {stringOrderBy}";
-
-        products = await OrderService.GetProductsAsync(qry);
-        StateHasChanged();
-        qry = "?";
-        Grid.Refresh();
     }
 
 }

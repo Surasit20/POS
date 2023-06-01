@@ -10,5 +10,8 @@ namespace Shared.ModelOData
 
 		[JsonPropertyName("value")]
 		public List<Product> Product { get; set; }
-	}
+
+        [JsonPropertyName("@odata.nextLink")]
+        public string NextLink { get; set; }
+    }
 }

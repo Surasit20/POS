@@ -20,7 +20,7 @@ namespace Shared.ModelDTO
         public decimal SellingPrice { get; set; }
 
         [StringLength(2000, MinimumLength = 2)]
-        public string? ImageUrl { get; set; } = String.Empty;
+        public string? ImageUrl { get; set; } = "https://thumbs.dreamstime.com/b/product-icon-collection-trendy-modern-flat-linear-vector-white-background-thin-line-outline-illustration-130947207.jpg";
 
         [StringLength(50, MinimumLength = 1)]
         public string Unit { get; set; }

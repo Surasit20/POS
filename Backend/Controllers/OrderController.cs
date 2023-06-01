@@ -1,9 +1,12 @@
-﻿using Backend.Data;
+﻿using AutoMapper;
+using Backend.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Results;
+using Microsoft.EntityFrameworkCore;
 using Shared.Entity;
+using Shared.ModelDTO;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,11 +18,11 @@ namespace Backend.Controllers
 
     {
         private readonly DataContext _context;
-        //private readonly IMapper _mapper;
-        public OrderController(DataContext context)
+        private readonly IMapper _mapper;
+        public OrderController(DataContext context, IMapper mapper)
         {
             _context = context;
-            // _mapper = mapper;
+             _mapper = mapper;
 
         }
 
@@ -27,9 +30,17 @@ namespace Backend.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public IActionResult Get()
+        public async Task<List<OrderDTO>> Get()
         {
-            return Ok(_context.Products.AsQueryable());
+
+            var data = await _context.Orders
+                .Include(o=> o.Purchaser)
+                .Include(o => o.Supplier)
+                .Include(o => o.OrderItem)
+                .ThenInclude(o=> o.Product)
+                .ToListAsync();
+            List<OrderDTO> orderDto = _mapper.Map<List<OrderDTO>>(data);
+            return orderDto;
         }
 
 		// GET api/<OrderController>/5

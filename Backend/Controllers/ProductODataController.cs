@@ -27,8 +27,8 @@ namespace Backend.Controllers
 
 		}
 
-		[EnableQuery]
-		public IActionResult Get()
+        [EnableQuery(PageSize = 10)]
+        public IActionResult Get()
 		{
 			return Ok(_context.Products.AsQueryable());
 		}
@@ -48,17 +48,26 @@ namespace Backend.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Post(ProductDTO productDto)
+		public async Task<IActionResult> Post([FromBody] ProductDTO productDto)
 		{
-			if (!ModelState.IsValid)
+			try
 			{
-				return BadRequest(ModelState);
-			}
-            Product product = _mapper.Map<Product>(productDto);
+				if (!ModelState.IsValid)
+				{
+					return BadRequest(ModelState);
+				}
+			Product product = _mapper.Map<Product>(productDto);
             _context.Products.Add(product);
 			await _context.SaveChangesAsync();
 			return Created(product);
-		}
+            }catch (Exception ex)
+			{
+          
+                Console.WriteLine(ex.Message);
+                return Created(new Product());
+            }
+
+        }
 
 		[HttpDelete]
 		public async Task<IActionResult> Delete([FromODataUri] int key)
