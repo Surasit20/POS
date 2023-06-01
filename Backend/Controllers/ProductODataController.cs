@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Backend.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 using Shared.Entity;
 using Shared.ModelDTO;
 using System.Net;
@@ -81,6 +83,71 @@ namespace Backend.Controllers
 			await _context.SaveChangesAsync();
 			return NoContent();
 		}
+        [HttpPatch]
+        public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] Delta<Product> product)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var entity = await _context.Products.FindAsync(key);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+            product.Patch(entity);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(key))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return Updated(entity);
+        }
+        [HttpPut]
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] Product update)
+        {
+     
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            if (key != update.ProductId)
+            {
+                return BadRequest();
+            }
+            _context.Entry(update).State = EntityState.Modified;
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(key))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return Updated(update);
+        }
 
-	}
+        private bool ProductExists(int key)
+        {
+            return _context.Products.Any(p => p.ProductId == key);
+        }
+
+    }
 }

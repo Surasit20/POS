@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Shared.ModelDTO
 {
@@ -25,6 +26,7 @@ namespace Shared.ModelDTO
         [StringLength(50, MinimumLength = 1)]
         public string Unit { get; set; }
 
+        [JsonIgnore]
         public ICollection<OrderItemDTO> OrderItem { get; set; } = new List<OrderItemDTO>();
     }
 }

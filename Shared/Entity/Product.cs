@@ -28,6 +28,6 @@ namespace Shared.Entity
         public string Unit { get; set; }
 
         [JsonIgnore]
-        public ICollection<OrderItem> OrderItem { get; set; }
+        public ICollection<OrderItem> OrderItem { get; set; } = new List<OrderItem>();
     }
 }

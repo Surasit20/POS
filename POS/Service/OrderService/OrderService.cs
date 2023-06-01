@@ -19,21 +19,40 @@ namespace Frontend.Service.OrderService
         }
 
 
-        public async Task<ProductApiResponse> GetProductsAsync(string qry)
+        public async Task<ProductApiResponse> GetProductsAsync(string qry , string nextPage="")
         {
             try
             {
-                var response = await _http.GetAsync($"{BaseODataCommon.Product}{qry}&count=true");
-                if (response.IsSuccessStatusCode)
+                if(nextPage == "")
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var data = JsonSerializer.Deserialize<ProductApiResponse>(responseContent);
-                    return data!;
+                    var response = await _http.GetAsync($"{BaseODataCommon.Product}{qry}&count=true");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseContent = await response.Content.ReadAsStringAsync();
+                        var data = JsonSerializer.Deserialize<ProductApiResponse>(responseContent);
+                        return data!;
+                    }
+                    else
+                    {
+                        return new ProductApiResponse();
+                    }
                 }
                 else
                 {
-                    return new ProductApiResponse();
+                    var response = await _http.GetAsync(nextPage);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseContent = await response.Content.ReadAsStringAsync();
+                        var data = JsonSerializer.Deserialize<ProductApiResponse>(responseContent);
+                        return data!;
+                    }
+                    else
+                    {
+                        return new ProductApiResponse();
+                    }
                 }
+
+               
             }
             catch (Exception ex)
             {
@@ -47,7 +66,7 @@ namespace Frontend.Service.OrderService
         {
             try
             {
-                var response = await _http.GetAsync($"{BaseODataCommon.Order}");
+                var response = await _http.GetAsync($"{BaseODataCommon.Order}?expand = orderitem,supplier,purchaser");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -159,6 +178,53 @@ namespace Frontend.Service.OrderService
                 return false;
             }
 
+        }
+
+
+        public async Task<bool> PutProductAsync(Product product)
+        {
+            try
+            {
+                var response = await _http.PutAsJsonAsync($"{BaseODataCommon.Product}({product.ProductId})",product);
+                if (response.IsSuccessStatusCode || response.StatusCode.Equals(204))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    // var data = JsonSerializer.Deserialize<ProductApiResponse>(responseContent);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+
+        }
+
+        public async Task<ProductApiResponse> ConvertJsonToObj(HttpResponseMessage response)
+        {
+            try
+            {
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var data = JsonSerializer.Deserialize<ProductApiResponse>(responseContent);
+                    return data!;
+                }
+                else
+                {
+                    return new ProductApiResponse();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return new ProductApiResponse();
+            }
         }
     }
 }

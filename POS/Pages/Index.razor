@@ -2,7 +2,7 @@
 @using System.Text.Json;
 @inject HttpClient Http
 @using Frontend.Service.OrderService;
-@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Grids;
 @using Syncfusion.Blazor.Data;
 @using Syncfusion.Blazor.Lists
 @using Syncfusion.Blazor.Buttons
@@ -14,20 +14,20 @@
 @inject IOrderService OrderService
 <PageTitle>Index</PageTitle>
 
-<div class="container-fluid warpper-product">
+<div class="container-fluid px-4">
     @if (products != null)
     {
         <SfFab Target="#target" IconCss="e-icons e-plus" OnClick="@OpenDialog" Position=FabPosition.TopRight></SfFab>
         <div class="container">
             <div class="row">
-                <div class="col">
+                <div class="col-xl-6 col-lg-12">
                     <h3>Select</h3>
                     <SfListView DataSource="@DataSelect" ShowCheckBox="true" onchange="Rerender">
                         <ListViewFieldSettings TValue="DataModel" Id="Id" Text="Text" IsChecked="IsChecked"></ListViewFieldSettings>
                     </SfListView>
                 </div>
 
-                <div class="col">
+                <div class="col-xl-6 col-lg-12">
                     <h3>Order By</h3>
                     <SfRadioButton Label="Desc" Name="Desc" Value="desc" @bind-Checked="stringOrderBy"></SfRadioButton>
                     <SfRadioButton Label="Asc" Name="Asc" Value="asc" @bind-Checked="stringOrderBy"></SfRadioButton>
@@ -47,7 +47,7 @@
 
 
             <div class="row">
-                <div class="col">
+                <div class="col-xl-4 col-lg-12">
 
                     <h2>
                         Search By Product ID
@@ -65,7 +65,7 @@
                 </div>
 
 
-                <div class="col">
+                <div class="col-xl-4 col-lg-12">
                     <h2>
                         Search By Product Name
                     </h2>
@@ -80,7 +80,7 @@
                     </div>
                 </div>
 
-                <div class="col">
+                <div class="col-xl-4 col-lg-12">
                     <h2>
                         Delete By Id
                     </h2>
@@ -98,19 +98,29 @@
 
             <br />
         </div>
-        <SfGrid @ref="Grid" TValue="Product" AllowPaging="true" DataSource="products">
+        <SfGrid @ref="Grid" TValue="Product" AllowPaging="true" DataSource="products" Toolbar="@ToolbarItems">
+            <GridEvents OnActionBegin="ActionBeginHandler" TValue="Product"></GridEvents>
+            <GridEditSettings AllowEditing="true"></GridEditSettings>
+            <GridPageSettings PageSize="10">
+    
+                <Template>
+                    <div class="PagerTemplate">
+                        <div class="@($"e-first e-icons e-icon-first {ValidateFirst()} align-icons e-firstpage")" @onclick="ShowFirstPage" title="Go to first page">
+                        </div>
+                        <div class="@($"e-prev e-icons e-icon-prev {ValidateBack()} align-icons")" @onclick="ShowPreviousPage" title="Go to previous page"></div>
+                        <div>
+                            <input class="textbox add-border" type="text" @bind="pageNo" size="2" @oninput="LaunchEnteredPage" />
+                            <div id="totalpages" class="textbox"> of @totalPages pages </div>
+                        </div>
+                        <div class="@($"e-next e-icons e-icon-next   {ValidateForward()} align-icons e-next")" @onclick="ShowNextPage" title="Go to next page"></div>
+                        <div class="@($"e-last e-icons e-icon-last {ValidateLast()} align-icons")" @onclick="ShowLastPage" title="Go to last page"></div>
+                    </div>
 
-            @*		<GridPageSettings PageSize="5"></GridPageSettings>
-        <GridColumn>
-        <GridColumn Field=@nameof(Product.ProductId) HeaderText="Product ID" TextAlign="TextAlign.Right" Width="120" DefaultValue="0"></GridColumn>
-        <GridColumn Field=@nameof(Product.Name) HeaderText="Product ID" Width="120" DefaultValue="0"></GridColumn>
-        <GridColumn Field=@nameof(Product.PurchasePrice) HeaderText="Purchase Price" Width="120" DefaultValue="0"></GridColumn>
-        <GridColumn Field=@nameof(Product.SellingPrice) HeaderText="Selling Price" Width="120" DefaultValue="0"></GridColumn>
-        <GridColumn Field=@nameof(Product.Unit) HeaderText="Unit" Width="120" DefaultValue="0"></GridColumn>
-        </GridColumn>*@
+                </Template>
+            </GridPageSettings>
+
 
         </SfGrid>
-
 
         <SfDialog Width="300px" ShowCloseIcon="true" CloseOnEscape="true" @bind-Visible="@IsVisible">
             <DialogTemplates>
@@ -157,11 +167,12 @@
 @code {
 
     SfGrid<Product> Grid { get; set; }
-    List<Product> products { get; set; }
+    List<Product> products { get; set; } = new List<Product>();
     string url = "https://localhost:7085/odata/ProductOData";
     private Query Qry = new Query().Expand(new List<string> { "Name" });
     string qry = "?";
     private string stringOrderBy = "desc";
+    private string nextPage = "";
     private int numericValue { get; set; } = 10;
     private int numericValueIdDelte { get; set; } = 10;
     private string nameProduct { get; set; } = "";
@@ -170,14 +181,42 @@
     private ProductDTO productDto { get; set; } = new ProductDTO();
     SfToast ToastObj;
     private string ToastPosition = "Right";
+    public int pageNo { get; set; }
+    public int totalPages { get; set; }
+    public int totalCount { get; set; }
+    public bool DisableBackIcon = false;
+    public bool DisableForwardIcon = false;
+    public bool DisableFirstIcon = false;
+    public bool DisableLastIcon = false;
+    private List<string> ToolbarItems = new List<string>() { "Edit" , "Update", "Cancel" };
     public async Task LoadData()
     {
         try
         {
-            var data = await OrderService.GetProductsAsync(qry);
-            products = data.Product;
 
-            StateHasChanged();
+            var data = await OrderService.GetProductsAsync(qry, nextPage);
+            if (nextPage == "")
+            {
+                products = data.Product;
+                totalCount = data.Count;
+                nextPage = data.NextLink;
+
+                await Grid.Refresh();
+                StateHasChanged();
+                return;
+            }
+
+            if (data.Product != null)
+            {
+                foreach (Product product in data.Product)
+                {
+                    products.Add(product);
+                }
+            }
+
+            totalCount = data.Count;
+            nextPage = data.NextLink;
+            await Grid.Refresh();
 
         }
         catch (Exception err)
@@ -187,13 +226,104 @@
         }
 
     }
-    protected async override Task OnInitializedAsync()
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
 
-        await LoadData();
+
+        if (firstRender)
+        {
+            await LoadData();
+            totalPages = totalCount / Grid.PageSettings.PageSize;
+        }
+        pageNo = Grid.PageSettings.CurrentPage;
+        if (Grid.PageSettings.CurrentPage == totalPages)
+        {
+            DisableForwardIcon = true;
+            DisableLastIcon = true;
+        }
+        else
+        {
+            DisableForwardIcon = false;
+            DisableLastIcon = false;
+        }
+        if (Grid.PageSettings.CurrentPage == 1)
+        {
+            DisableBackIcon = true;
+            DisableFirstIcon = true;
+        }
+        else
+        {
+            DisableBackIcon = false;
+            DisableFirstIcon = false;
+        }
+
+        StateHasChanged();
 
     }
 
+    public string ValidateFirst()
+    {
+        if (DisableFirstIcon)
+        {
+            return "disableFirst";
+        }
+        return "";
+    }
+    public string ValidateLast()
+    {
+        if (DisableLastIcon)
+        {
+            return "disableLast";
+        }
+        return "";
+    }
+    public string ValidateForward()
+    {
+        if (DisableForwardIcon)
+        {
+            return "disableFront";
+        }
+        return "";
+    }
+    public string ValidateBack()
+    {
+        if (DisableBackIcon)
+        {
+            return "disableBack";
+        }
+        return "";
+    }
+    public async Task ShowNextPage()
+    {
+        await LoadData();
+        await Grid.GoToPageAsync((Grid.PageSettings.CurrentPage) + 1);
+    }
+    public void ShowPreviousPage()
+    {
+        Grid.GoToPageAsync((Grid.PageSettings.CurrentPage) - 1);
+    }
+    public void ShowFirstPage()
+    {
+        Grid.GoToPageAsync(1);
+    }
+    public void ShowLastPage()
+    {
+        Grid.GoToPageAsync(totalPages);
+    }
+    public void LaunchEnteredPage(Microsoft.AspNetCore.Components.ChangeEventArgs page)
+    {
+        if (page.Value == null || page.Value.ToString() == "")
+        {
+            return;
+        }
+        else
+        {
+            double enteredPage = Convert.ToDouble(page.Value);
+            if (enteredPage <= totalPages)
+                Grid.GoToPageAsync(enteredPage);
+        }
+    }
 
     private void OpenDialog()
     {
@@ -204,6 +334,8 @@
     {
         this.IsVisible = false;
     }
+
+
     private async void onClickDeleteById()
     {
         bool isSuccess = await OrderService.DeleteProduct(numericValueIdDelte);
@@ -222,12 +354,12 @@
     private async Task onClickSearchId()
     {
         products = await OrderService.GetProductByIdAsync(numericValue);
-        StateHasChanged();
+        await Grid.Refresh();
     }
     private async Task onClickSearchName()
     {
         products = await OrderService.GetProductByName(nameProduct);
-        StateHasChanged();
+        await Grid.Refresh();
     }
     private async Task onAddProduct()
     {
@@ -243,7 +375,7 @@
 
         }
         IsAddLoadingVisible = false;
-        StateHasChanged();
+
     }
 
     private async Task onToggleClick()
@@ -272,13 +404,40 @@
         }
         qry = qry.Remove(qry.Length - 1, 1);
         qry += $" {stringOrderBy}";
-
+        nextPage = "";
         await LoadData();
-
         qry = "?";
-        await Grid.Refresh();
+
     }
 
+    public async Task ActionBeginHandler(ActionEventArgs<Product> args)
+    {
+
+        if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+
+            if (args.Action == "Edit")
+            {
+                args.Data.OrderItem = new List<OrderItem>() { };
+                var res = await OrderService.PutProductAsync(args.Data) ;
+                if(res == true)
+                {
+                    await this.ToastObj.ShowAsync(Toast[1]);
+                    await LoadData();
+                }
+                else
+                {
+                    await this.ToastObj.ShowAsync(Toast[3]);
+                }
+
+            }
+
+        }
+        else if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            // await ProductService.DeleteProduct((int)args.Data.id);
+        }
+    }
     private DataModel[] DataSelect = {
 
         new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
@@ -350,4 +509,61 @@
     .e-btn-icon.e-icons.e-close-icon.e-icon-left:before {
         content: '\e878';
     }
+
+    .PagerTemplate {
+        width: 1000px;
+        height: 64px;
+        left: 183px;
+        top: 615px;
+        border-radius: 0px;
+    }
+
+    .textbox {
+        margin-top: 9px;
+        margin-bottom: 9px;
+        margin-right: 2px;
+        text-align: center;
+    }
+
+    .add-border {
+        border: #ddd 1px solid;
+    }
+
+    .align-icons {
+        margin-top: 9px;
+        margin-bottom: 9px;
+        margin-right: 16px;
+        cursor: pointer;
+    }
+
+    .e-firstpage {
+        margin-left: 6px;
+    }
+
+    .e-next {
+        margin-left: 16px;
+    }
+
+    .disableFirst {
+        pointer-events: none;
+        opacity: 0.3;
+    }
+
+    .disableLast {
+        pointer-events: none;
+        opacity: 0.3;
+    }
+
+    .disableFront {
+        pointer-events: none;
+        opacity: 0.3;
+    }
+
+    .disableBack {
+        pointer-events: none;
+        opacity: 0.3;
+    }
+
 </style>
+
+
