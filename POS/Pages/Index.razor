@@ -15,7 +15,7 @@
 <PageTitle>Index</PageTitle>
 
 <div class="container-fluid px-4">
-    @if (products != null)
+    @if (true)
     {
         <SfFab Target="#target" IconCss="e-icons e-plus" OnClick="@OpenDialog" Position=FabPosition.TopRight></SfFab>
         <div class="container">
@@ -98,12 +98,13 @@
 
             <br />
         </div>
-        <SfGrid @ref="Grid" TValue="Product" AllowPaging="true" DataSource="products" Toolbar="@ToolbarItems">
+        <SfGrid @ref="Grid" TValue="Product" AllowPaging="true"  Toolbar="@ToolbarItems">
             <GridEvents OnActionBegin="ActionBeginHandler" TValue="Product"></GridEvents>
+            <SfDataManager @ref="dm" Url="@url" Adaptor="Adaptors.ODataV4Adaptor">></SfDataManager>
             <GridEditSettings AllowEditing="true"></GridEditSettings>
             <GridPageSettings PageSize="10">
     
-                <Template>
+          @*      <Template>
                     <div class="PagerTemplate">
                         <div class="@($"e-first e-icons e-icon-first {ValidateFirst()} align-icons e-firstpage")" @onclick="ShowFirstPage" title="Go to first page">
                         </div>
@@ -116,7 +117,7 @@
                         <div class="@($"e-last e-icons e-icon-last {ValidateLast()} align-icons")" @onclick="ShowLastPage" title="Go to last page"></div>
                     </div>
 
-                </Template>
+                </Template>*@
             </GridPageSettings>
             <GridColumns>
                 <GridColumn Field=@nameof(Product.ProductId) HeaderText="Product Id" Width="150"> </GridColumn>
@@ -128,6 +129,7 @@
             </GridColumns>
 
         </SfGrid>
+
 
         <SfDialog Width="300px" ShowCloseIcon="true" CloseOnEscape="true" @bind-Visible="@IsVisible">
             <DialogTemplates>
@@ -174,6 +176,7 @@
 @code {
 
     SfGrid<Product> Grid { get; set; }
+    public DataManager dm { get; set; }
     List<Product> products { get; set; } = new List<Product>();
     string url = "https://localhost:7085/odata/ProductOData";
     private Query Qry = new Query().Expand(new List<string> { "Name" });
@@ -360,7 +363,11 @@
 
     private async Task onClickSearchId()
     {
-        products = await OrderService.GetProductByIdAsync(numericValue);
+        // products = await OrderService.GetProductByIdAsync(numericValue);
+        string urll = url + $"({numericValue})";
+        dm.Url = url + $"?filter=productid eq {numericValue}";
+        //await LoadData();
+
         await Grid.Refresh();
     }
     private async Task onClickSearchName()
@@ -381,6 +388,8 @@
             await LoadData();
 
         }
+        await this.ToastObj.ShowAsync(Toast[3]);
+        this.IsVisible = false;
         IsAddLoadingVisible = false;
 
     }
@@ -412,7 +421,10 @@
         qry = qry.Remove(qry.Length - 1, 1);
         qry += $" {stringOrderBy}";
         nextPage = "";
-        await LoadData();
+        dm.Url = url + qry;
+        //await LoadData();
+
+        await Grid.Refresh();
         qry = "?";
 
     }
@@ -449,11 +461,11 @@
     }
     private DataModel[] DataSelect = {
 
-        new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=false },
-        new DataModel { Text = "Name", Id = "Name" ,IsChecked=false },
-        new DataModel { Text = "Selling Price", Id = "SellingPrice" ,IsChecked=false },
-        new DataModel { Text = "Purchase Price", Id = "PurchasePrice",IsChecked=false  },
-        new DataModel { Text = "Unit", Id = "Unit",IsChecked=false  },
+        new DataModel { Text ="Prduct Id", Id = "ProductId",IsChecked=true},
+        new DataModel { Text = "Name", Id = "Name" ,IsChecked=true },
+        new DataModel { Text = "Selling Price", Id = "SellingPrice" ,IsChecked=true },
+        new DataModel { Text = "Purchase Price", Id = "PurchasePrice",IsChecked=true  },
+        new DataModel { Text = "Unit", Id = "Unit",IsChecked=true  },
 
     };
     private List<ToastModel> Toast = new List<ToastModel>

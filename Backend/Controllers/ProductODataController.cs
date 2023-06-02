@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Backend.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Shared.Entity;
 using Shared.ModelDTO;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 
@@ -29,10 +31,10 @@ namespace Backend.Controllers
 
 		}
 
-        [EnableQuery(PageSize = 10)]
+        [EnableQuery(PageSize = 10) ]
         public IActionResult Get()
-		{
-			return Ok(_context.Products.AsQueryable());
+		{          
+            return Ok(_context.Products.AsQueryable());
 		}
         [EnableQuery]
         public SingleResult<Product> Get([FromODataUri] int key)

@@ -11,8 +11,8 @@
     <h3>Order</h3>
     @if (orders != null)
     {
-        <SfGrid TValue="Order" AllowPaging="true" DataSource="orders">
-
+        <SfGrid TValue="Order" AllowPaging="true" >
+            <SfDataManager Url="@url" Adaptor="Adaptors.ODataAdaptor"></SfDataManager>
             @*		<GridPageSettings PageSize="5"></GridPageSettings>
         <GridColumn>
         <GridColumn Field=@nameof(Product.ProductId) HeaderText="Product ID" TextAlign="TextAlign.Right" Width="120" DefaultValue="0"></GridColumn>
