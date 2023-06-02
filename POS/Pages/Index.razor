@@ -118,7 +118,14 @@
 
                 </Template>
             </GridPageSettings>
-
+            <GridColumns>
+                <GridColumn Field=@nameof(Product.ProductId) HeaderText="Product Id" Width="150"> </GridColumn>
+                <GridColumn Field=@nameof(Product.Name) HeaderText="Name" Width="150"> </GridColumn>
+                <GridColumn Field=@nameof(Product.Description) HeaderText="Description" Width="150"> </GridColumn>
+                <GridColumn Field=@nameof(Product.PurchasePrice) HeaderText="Purchase Price" Width="150"> </GridColumn>
+                <GridColumn Field=@nameof(Product.SellingPrice) HeaderText="Selling Price" Width="150"> </GridColumn>
+                <GridColumn Field=@nameof(Product.Unit) HeaderText="Unit" Width="150"> </GridColumn>
+            </GridColumns>
 
         </SfGrid>
 
@@ -422,8 +429,10 @@
                 var res = await OrderService.PutProductAsync(args.Data) ;
                 if(res == true)
                 {
+                    nextPage = "";
                     await this.ToastObj.ShowAsync(Toast[1]);
                     await LoadData();
+                    await Grid.Refresh();
                 }
                 else
                 {

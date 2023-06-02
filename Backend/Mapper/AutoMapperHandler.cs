@@ -9,7 +9,7 @@ namespace Backend.Mapper
         public AutoMapperHandler()
         {
             CreateMap<Order, OrderDTO>().ReverseMap();
-            CreateMap<OrderItemDTO, OrderItemDTO>().ReverseMap();
+            CreateMap<OrderItem, OrderItemDTO>().ReverseMap();
             CreateMap<Product, ProductDTO>().ReverseMap();
             CreateMap<Purchaser, PurchaserDTO>().ReverseMap();
             CreateMap<Supplier, SupplierDTO>().ReverseMap();           
